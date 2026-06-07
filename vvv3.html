@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sening Valentining</title>
+    <style>
+        /* --- GENERAL STYLES (UMUMIY STILLAR) --- */
+        :root {
+            --primary: #ff4d6d;
+            --bg-color: #ffe5ec;
+            --glass: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --text: #590d22;
+            --transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ffb3c1 0%, #fff0f3 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--text);
+        }
+
+        /* --- CONTAINER (ASOSIY OYNA) --- */
+        #app {
+            width: 90%;
+            max-width: 450px;
+            min-height: 600px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(255, 77, 109, 0.2);
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* --- STAGE MANAGEMENT (BOSQICHLARNI BOSHQARISH) --- */
+        .stage {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+
+        .stage.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        .stage.hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        /* --- TYPOGRAPHY & ELEMENTS --- */
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        p {
+            margin-bottom: 25px;
+            line-height: 1.5;
+            font-size: 1rem;
+        }
+
+        input {
+            padding: 12px 20px;
+            border-radius: 50px;
+            border: 2px solid #ffccd5;
+            outline: none;
+            width: 80%;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            padding: 12px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 77, 109, 0.6);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* --- STAGE 2: PUZZLE --- */
+        .puzzle-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            width: 300px;
+            height: 300px;
+            margin-bottom: 20px;
+            background: #fff;
+            border: 5px solid white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .tile {
+            width: 100%;
+            height: 100%;
+            background-image: url('./images/photo_2025-12-18_20-40-37.jpg'); /* O'zgartirish mumkin */
+            background-size: 300px 300px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .tile.selected {
+            border: 2px solid var(--primary);
+            transform: scale(0.95);
+            z-index: 10;
+        }
+
+        /* --- STAGE 3: CHOICE --- */
+        .gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .gallery-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.15);
+            border: 3px solid transparent;
+        }
+
+        .gallery-card:hover {
+            transform: scale(1.04);
+            border-color: var(--primary);
+            box-shadow: 0 8px 25px rgba(255, 77, 109, 0.35);
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-card .card-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            padding: 8px 10px;
+            text-align: center;
+        }
+
+        /* --- STAGE 4: DRAW --- */
+        #drawCanvas {
+            border-radius: 16px;
+            border: 3px solid #ffccd5;
+            background: white;
+            cursor: crosshair;
+            touch-action: none;
+            box-shadow: 0 4px 15px rgba(255,77,109,0.15);
+            margin-bottom: 14px;
+        }
+
+        #drawProgress {
+            width: 80%;
+            height: 8px;
+            background: #ffccd5;
+            border-radius: 50px;
+            margin-bottom: 14px;
+            overflow: hidden;
+        }
+
+        #drawProgressBar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff4d6d, #ff85a1);
+            border-radius: 50px;
+            transition: width 0.3s ease;
+        }
+
+        #drawHint {
+            font-size: 0.85rem;
+            color: #ff4d6d;
+            margin-bottom: 0;
+        }
+
+        /* --- STAGE 5: GROW FLOWER --- */
+        #flowerStage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #flowerSvg {
+            width: 200px;
+            height: 220px;
+            margin-bottom: 10px;
+        }
+
+        #holdBtn {
+            padding: 14px 36px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,77,109,0.4);
+            transition: 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #holdBtn:active {
+            transform: scale(0.96);
+        }
+
+        #flowerHint {
+            font-size: 0.82rem;
+            color: #aaa;
+            margin-top: 10px;
+            margin-bottom: 0;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        /* --- STAGE CHANCE --- */
+        #stage-chance {
+            background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 50%, #0a3d62 100%);
+            border-radius: 24px;
+        }
+
+        .chance-stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            pointer-events: none;
+            overflow: hidden;
+            border-radius: 24px;
+        }
+
+        .chance-star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: twinkle 2s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(1); }
+            100% { opacity: 0.9; transform: scale(1.4); }
+        }
+
+        .chance-question {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #e0f0ff;
+            margin-bottom: 12px;
+            text-shadow: 0 0 20px rgba(100,180,255,0.5);
+            line-height: 1.3;
+        }
+
+        .chance-sub {
+            color: #7fb3d3;
+            font-size: 0.9rem;
+            margin-bottom: 35px;
+        }
+
+        .chance-btns {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-yes {
+            padding: 14px 38px;
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,180,216,0.5);
+            transition: 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .btn-yes:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,180,216,0.7);
+        }
+
+        .btn-no {
+            padding: 14px 38px;
+            background: rgba(255,255,255,0.1);
+            color: #aaccdd;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .btn-no:hover {
+            background: rgba(255,255,255,0.18);
+            transform: translateY(-3px);
+        }
+
+        /* --- FINAL STAGE --- */
+        .video-wrapper {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 200px;
+            border: none;
+        }
+
+        .final-deco {
+            font-size: 2rem;
+            letter-spacing: 12px;
+            animation: floatDeco 2s ease-in-out infinite alternate;
+        }
+
+        .final-hearts {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            animation: heartBeat 1.2s ease-in-out infinite;
+        }
+
+        .final-sparkles {
+            position: absolute;
+            width: 100%; height: 100%;
+            top: 0; left: 0;
+            pointer-events: none;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .sparkle {
+            position: absolute;
+            font-size: 1.2rem;
+            animation: floatUp 3s ease-in infinite;
+            opacity: 0;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-300px) scale(1.2); opacity: 0; }
+        }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        @keyframes floatDeco {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-6px); }
+        }
+
+        .hidden-answer {
+            color: #ff0033;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="stage-1" class="stage active">
+        <h2>Birinchi Savol ❤️</h2>
+        <p>Qachon 1-uchrashuvga chiqdik? (aniq sanani yoz) <span style="color:#ff4d6d; font-size:0.85rem;">(23 if u dunno 😏)</span></p>
+        <input type="text" id="answerInput" placeholder="Masalan: 23.11.2024">
+        <button onclick="checkAnswer()">Tasdiqlash</button>
+        <p id="errorMsg" style="color:red; font-size:0.8rem; margin-top:10px; opacity:0;"></p>
+    </div>
+
+    <div id="stage-2" class="stage">
+        <h2>Rasmni Yig'ing 🧩</h2>
+        <p>Keyingi bosqichga o'tish uchun bo'laklarni joyiga qo'ying.</p>
+        <div class="puzzle-container" id="puzzleBoard"></div>
+    </div>
+
+    <div id="stage-3" class="stage">
+        <h2>Eng yoqimlisini tanla ✨</h2>
+        <p>Senga qaysi biri ko'proq yoqadi?</p>
+        <div class="gallery">
+            <div class="gallery-card" onclick="chooseImage('./images/kuchuk.jpg', 'Itcha')">
+                <img src="./images/kuchuk.jpg">
+                <div class="card-label">🐶 Kuchukcha</div>
+            </div>
+            <div class="gallery-card" onclick="chooseImage('./images/mushuk.jpg', 'Mushuk')">
+                <img src="./images/mushuk.jpg">
+                <div class="card-label">🐱 Mushuk</div>
+            </div>
+            <div class="gallery-card" onclick="chooseImage('./images/xomyak.jpg', 'Xomyak')">
+                <img src="./images/xomyak.jpg">
+                <div class="card-label">🐹 Xomyakcha</div>
+            </div>
+            <div class="gallery-card" onclick="chooseImage('./images/xomyak2_0.jpg', 'Sincap')">
+                <img src="./images/xomyak2.0.jpg">
+                <div class="card-label">🐭 Sincapcha</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stage-3-5" class="stage">
+        <img id="selectedImg" src="./images/maymun.jpg" style="width:100%; max-height: 200px; object-fit: cover; border-radius:12px; margin-bottom:15px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);">
+        <h3 id="choiceText">Ajoyib tanlov!</h3>
+        <p>Xuddi sen kabi chiroyli...</p>
+        <button onclick="nextStage(4)">Davom etish</button>
+    </div>
+
+    <!-- STAGE 4: RASM CHIZISH -->
+    <div id="stage-4" class="stage">
+        <h2>Yurak chiz 🎨</h2>
+        <p style="margin-bottom:12px;">Menga chiroyli yurak chizib ber!</p>
+        <canvas id="drawCanvas" width="260" height="220"></canvas>
+        <div id="drawProgress"><div id="drawProgressBar"></div></div>
+        <p id="drawHint">Chizishni davom ettir... ❤️</p>
+    </div>
+
+    <!-- STAGE 5: GUL O'STIRISH -->
+    <div id="stage-5" class="stage" id="flowerStage">
+        <h2>Gul o'stir 🌹</h2>
+        <p style="margin-bottom:8px;">Tugmani bosib tur — gulni o'stir!</p>
+        <svg id="flowerSvg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- Poya -->
+            <line id="flowerStem" x1="100" y1="210" x2="100" y2="210" stroke="#4caf50" stroke-width="4" stroke-linecap="round"/>
+            <!-- Barglar -->
+            <ellipse id="leaf1" cx="80" cy="180" rx="0" ry="0" fill="#66bb6a" transform="rotate(-30 80 180)" opacity="0"/>
+            <ellipse id="leaf2" cx="120" cy="155" rx="0" ry="0" fill="#66bb6a" transform="rotate(30 120 155)" opacity="0"/>
+            <!-- Gul barg (petals) -->
+            <ellipse id="petal1" cx="100" cy="80" rx="0" ry="0" fill="#ff4d6d" opacity="0"/>
+            <ellipse id="petal2" cx="100" cy="80" rx="0" ry="0" fill="#ff4d6d" opacity="0" transform="rotate(60 100 100)"/>
+            <ellipse id="petal3" cx="100" cy="80" rx="0" ry="0" fill="#ff4d6d" opacity="0" transform="rotate(120 100 100)"/>
+            <ellipse id="petal4" cx="100" cy="80" rx="0" ry="0" fill="#ff85a1" opacity="0" transform="rotate(180 100 100)"/>
+            <ellipse id="petal5" cx="100" cy="80" rx="0" ry="0" fill="#ff85a1" opacity="0" transform="rotate(240 100 100)"/>
+            <ellipse id="petal6" cx="100" cy="80" rx="0" ry="0" fill="#ff85a1" opacity="0" transform="rotate(300 100 100)"/>
+            <!-- Markaz -->
+            <circle id="flowerCenter" cx="100" cy="100" r="0" fill="#ffeb3b" opacity="0"/>
+        </svg>
+        <button id="holdBtn"
+            onmousedown="startGrow()" onmouseup="stopGrow()"
+            ontouchstart="startGrow(event)" ontouchend="stopGrow()">
+            🌱 Bosib tur
+        </button>
+        <p id="flowerHint">Bosib turganingda o'sadi...</p>
+    </div>
+
+
+    <!-- STAGE CHANCE: LAST CHANCE QUESTION -->
+    <div id="stage-chance" class="stage">
+        <div class="chance-stars" id="chanceStars"></div>
+        <p class="chance-sub">one more thing...</p>
+        <h2 class="chance-question">Would u give me<br>a last chance? 🌌</h2>
+        <div class="chance-btns">
+            <button class="btn-yes" onclick="sendChance('YES')">YES ✨</button>
+            <button class="btn-no" onclick="sendChance('NO')">NO</button>
+        </div>
+    </div>
+
+    <!-- FINAL STAGE -->
+    <div id="stage-final" class="stage">
+        <div class="final-sparkles" id="finalSparkles"></div>
+        <div class="final-hearts">💖</div>
+        <div class="video-wrapper">
+            <iframe src="https://www.youtube.com/embed/2Vv-BfVoq4g?controls=0&autoplay=1" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="final-deco">
+            <span>🌹</span><span>💫</span><span>🌹</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- GLOBAL VARIABLELAR ---
+    let currentStage = 1;
+    let puzzleSolved = false;
+    let selectedTile = null;
+    
+    // --- NAVIGATION FUNCTIONS (O'TISH FUNKSIYALARI) ---
+    function nextStage(stageNumber) {
+        document.querySelector('.stage.active').classList.remove('active');
+        document.querySelector('.stage.active')?.classList.add('hidden');
+        
+        setTimeout(() => {
+            document.querySelectorAll('.stage').forEach(el => el.classList.remove('active', 'hidden'));
+            let id;
+            if (stageNumber === 'final') id = 'stage-final';
+            else if (stageNumber === 'chance') id = 'stage-chance';
+            else id = 'stage-' + stageNumber;
+            const next = document.getElementById(id);
+            if (next) next.classList.add('active');
+
+            if (stageNumber === 'chance') initChanceStars();
+            if (stageNumber === 'final') initFinalSparkles();
+        }, 500);
+    }
+
+    // --- CHANCE STAGE ---
+    function initChanceStars() {
+        const container = document.getElementById('chanceStars');
+        container.innerHTML = '';
+        for (let i = 0; i < 40; i++) {
+            const s = document.createElement('div');
+            s.className = 'chance-star';
+            s.style.left = Math.random() * 100 + '%';
+            s.style.top = Math.random() * 100 + '%';
+            s.style.animationDelay = (Math.random() * 2) + 's';
+            s.style.width = s.style.height = (Math.random() * 3 + 1) + 'px';
+            container.appendChild(s);
+        }
+    }
+
+    async function sendChance(answer) {
+        try {
+            await fetch('https://formspree.io/f/maqzekbz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answer: answer, message: 'Last chance answer: ' + answer })
+            });
+        } catch(e) {}
+        nextStage('final');
+    }
+
+    // --- FINAL STAGE SPARKLES ---
+    function initFinalSparkles() {
+        const container = document.getElementById('finalSparkles');
+        container.innerHTML = '';
+        const emojis = ['✨','💫','🌸','💕','⭐','🌟'];
+        for (let i = 0; i < 12; i++) {
+            const s = document.createElement('div');
+            s.className = 'sparkle';
+            s.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            s.style.left = Math.random() * 90 + '%';
+            s.style.top = Math.random() * 80 + 20 + '%';
+            s.style.animationDelay = (Math.random() * 3) + 's';
+            s.style.animationDuration = (2 + Math.random() * 2) + 's';
+            container.appendChild(s);
+        }
+    }
+
+    // --- STAGE 1 LOGIC (SAVOLNI TEKSHIRISH) ---
+    function checkAnswer() {
+        const input = document.getElementById('answerInput').value.trim().toLowerCase();
+        const error = document.getElementById('errorMsg');
+        
+        // JAVOBNI SHU YERDA O'ZGARTIRING
+        const correctAnswers = ["noyabr", "23", "23.11", "november", "23.11.2024", "23/11", "23/11/2024"]; 
+
+        if (correctAnswers.some(ans => input === ans || input.includes(ans))) {
+            // To'g'ri bo'lsa
+            error.style.opacity = '0';
+            nextStage(2);
+            initPuzzle(); // Puzzleni ishga tushirish
+        } else {
+            // Noto'g'ri bo'lsa
+            error.innerText = "Xato! Yaxshilab o'ylab ko'rchi 😉";
+            error.style.opacity = '1';
+            
+            // Inputni silkitish effekti
+            const inputField = document.getElementById('answerInput');
+            inputField.style.transform = 'translateX(10px)';
+            setTimeout(() => inputField.style.transform = 'translateX(0)', 100);
+        }
+    }
+
+    // --- STAGE 2 LOGIC (PUZZLE) ---
+    function initPuzzle() {
+        const container = document.getElementById('puzzleBoard');
+        container.innerHTML = '';
+        
+        // 0 dan 8 gacha raqamlarni aralashtiramiz
+        let tiles = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        tiles.sort(() => Math.random() - 0.5);
+
+        tiles.forEach((pos, index) => {
+            const div = document.createElement('div');
+            div.classList.add('tile');
+            
+            // Background position hisoblash (3x3 grid uchun)
+            // Asl rasm joylashuvi: 0, 1, 2 (qator 1), 3, 4, 5 (qator 2)...
+            // 300px rasm, har bir katak 100px
+            const x = (pos % 3) * 100;
+            const y = Math.floor(pos / 3) * 100;
+            
+            div.style.backgroundPosition = `-${x}px -${y}px`;
+            div.dataset.correctPos = pos; // To'g'ri joyi
+            div.dataset.currentId = index; // Hozirgi ID
+            
+            // Bosganda almashtirish funksiyasi
+            div.onclick = () => handleTileClick(div);
+            container.appendChild(div);
+        });
+    }
+
+    function handleTileClick(tile) {
+        if (puzzleSolved) return;
+
+        if (!selectedTile) {
+            // Birinchi katak tanlandi
+            selectedTile = tile;
+            tile.classList.add('selected');
+        } else {
+            // Ikkinchi katak tanlandi -> Almashamiz
+            const prevBg = selectedTile.style.backgroundPosition;
+            const prevData = selectedTile.dataset.correctPos;
+
+            selectedTile.style.backgroundPosition = tile.style.backgroundPosition;
+            selectedTile.dataset.correctPos = tile.dataset.correctPos;
+            
+            tile.style.backgroundPosition = prevBg;
+            tile.dataset.correctPos = prevData;
+
+            selectedTile.classList.remove('selected');
+            selectedTile = null;
+
+            checkPuzzleSuccess();
+        }
+    }
+
+    function checkPuzzleSuccess() {
+        const tiles = document.querySelectorAll('.tile');
+        let isCorrect = true;
+        
+        tiles.forEach((tile, index) => {
+            if (parseInt(tile.dataset.correctPos) !== index) {
+                isCorrect = false;
+            }
+        });
+
+        if (isCorrect) {
+            puzzleSolved = true;
+            document.querySelector('.puzzle-container').style.border = '5px solid #4cc9f0';
+            setTimeout(() => {
+                alert("Barakalla! Rasm yig'ildi.");
+                nextStage(3);
+            }, 500);
+        }
+    }
+
+    // --- STAGE 3 LOGIC (TANLOV) ---
+    function chooseImage(src, text) {
+        document.getElementById('selectedImg').src = "./images/maymun.jpg"
+        
+        // Textni o'zbek tilida moslash
+        // localStorage.setItem('valentineChoice', text); // Agar kerak bo'lsa saqlash
+        nextStage('3-5');
+    }
+
+    // --- STAGE 4 LOGIC (RASM CHIZISH) ---
+    (function() {
+        let drawing = false, strokes = 0;
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        const bar = document.getElementById('drawProgressBar');
+        const hint = document.getElementById('drawHint');
+        const GOAL = 300;
+
+        ctx.strokeStyle = '#ff4d6d';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        function getPos(e) {
+            const r = canvas.getBoundingClientRect();
+            if (e.touches) return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+            return { x: e.clientX - r.left, y: e.clientY - r.top };
+        }
+
+        function onStart(e) { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+        function onMove(e) {
+            e.preventDefault();
+            if (!drawing) return;
+            const p = getPos(e);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+            strokes++;
+            const pct = Math.min((strokes / GOAL) * 100, 100);
+            bar.style.width = pct + '%';
+            if (pct >= 100) {
+                drawing = false;
+                hint.innerText = "Wow, juda chiroyli! 💖";
+                hint.style.color = '#ff4d6d';
+                setTimeout(() => nextStage(5), 900);
+            }
+        }
+        function onEnd() { drawing = false; }
+
+        canvas.addEventListener('mousedown', onStart);
+        canvas.addEventListener('mousemove', onMove);
+        canvas.addEventListener('mouseup', onEnd);
+        canvas.addEventListener('touchstart', onStart, { passive: false });
+        canvas.addEventListener('touchmove', onMove, { passive: false });
+        canvas.addEventListener('touchend', onEnd);
+    })();
+
+    // --- STAGE 5 LOGIC (GUL O'STIRISH) ---
+    let growInterval = null;
+    let growProgress = 0; // 0 to 100
+
+    function startGrow(e) {
+        if (e) e.preventDefault();
+        if (growInterval) return;
+        growInterval = setInterval(() => {
+            growProgress = Math.min(growProgress + 1, 100);
+            updateFlower(growProgress);
+            if (growProgress >= 100) {
+                clearInterval(growInterval);
+                growInterval = null;
+                document.getElementById('flowerHint').innerText = "Barakalla! Sevgi kabi o'sdi 🌹";
+                document.getElementById('holdBtn').disabled = true;
+                setTimeout(() => nextStage('chance'), 1200);
+            }
+        }, 30);
+    }
+
+    function stopGrow() {
+        clearInterval(growInterval);
+        growInterval = null;
+    }
+
+    function updateFlower(p) {
+        // Poya o'sadi (y2: 210 → 100)
+        const stemY = 210 - (p / 100) * 110;
+        document.getElementById('flowerStem').setAttribute('y2', stemY);
+
+        // Barglar 40% dan keyin
+        if (p >= 40) {
+            const lp = (p - 40) / 60;
+            const lr = lp * 18;
+            const lo = Math.min(lp, 1);
+            document.getElementById('leaf1').setAttribute('rx', lr); document.getElementById('leaf1').setAttribute('ry', lr * 0.5); document.getElementById('leaf1').setAttribute('opacity', lo);
+            document.getElementById('leaf2').setAttribute('rx', lr); document.getElementById('leaf2').setAttribute('ry', lr * 0.5); document.getElementById('leaf2').setAttribute('opacity', lo);
+        }
+
+        // Gulbarglar 70% dan keyin
+        if (p >= 70) {
+            const fp = (p - 70) / 30;
+            const pr = fp * 22;
+            const po = Math.min(fp, 1);
+            ['petal1','petal2','petal3','petal4','petal5','petal6'].forEach(id => {
+                document.getElementById(id).setAttribute('rx', pr * 0.55);
+                document.getElementById(id).setAttribute('ry', pr);
+                document.getElementById(id).setAttribute('opacity', po);
+            });
+            document.getElementById('flowerCenter').setAttribute('r', fp * 14);
+            document.getElementById('flowerCenter').setAttribute('opacity', po);
+        }
+    }
+
+</script>
+</body>
+</html>
