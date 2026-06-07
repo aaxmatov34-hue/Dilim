@@ -265,6 +265,11 @@
         #holdBtn:active {
             transform: scale(0.96);
         }
+        .btn-no {
+  position: fixed;
+  transition: left 0.18s cubic-bezier(0.22,1,0.36,1), top 0.18s cubic-bezier(0.22,1,0.36,1);
+  cursor: pointer;
+}
 
         #flowerHint {
             font-size: 0.82rem;
@@ -817,7 +822,53 @@
             document.getElementById('flowerCenter').setAttribute('opacity', po);
         }
     }
+const btn = document.querySelector('.btn-no');
 
+let bx = 200, by = 200;
+btn.style.left = bx + 'px';
+btn.style.top = by + 'px';
+
+const btnW = btn.offsetWidth || 100;
+const btnH = btn.offsetHeight || 48;
+
+function escape(mx, my) {
+  const cx = bx + btnW / 2;
+  const cy = by + btnH / 2;
+  const dx = cx - mx;
+  const dy = cy - my;
+  const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+
+  let nx = bx + (dx / dist) * 180;
+  let ny = by + (dy / dist) * 180;
+
+  nx = Math.max(8, Math.min(window.innerWidth - btnW - 8, nx));
+  ny = Math.max(8, Math.min(window.innerHeight - btnH - 8, ny));
+
+  bx = nx; by = ny;
+  btn.style.left = bx + 'px';
+  btn.style.top = by + 'px';
+}
+
+document.addEventListener('mousemove', function(e) {
+  const cx = bx + btnW / 2;
+  const cy = by + btnH / 2;
+  const dist = Math.sqrt((e.clientX-cx)**2 + (e.clientY-cy)**2);
+  if (dist < 100) escape(e.clientX, e.clientY);
+});
+
+// onclick="sendChance('NO')" ishlashda davom etadi, qochishdan keyin
+btn.addEventListener('click', function(e) {
+  escape(e.clientX, e.clientY);
+});
+
+document.addEventListener('touchmove', function(e) {
+  const t = e.touches[0];
+  const cx = bx + btnW / 2;
+  const cy = by + btnH / 2;
+  const dist = Math.sqrt((t.clientX-cx)**2 + (t.clientY-cy)**2);
+  if (dist < 100) escape(t.clientX, t.clientY);
+}, { passive: true });
 </script>
+
 </body>
 </html>
